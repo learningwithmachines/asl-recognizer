@@ -5,6 +5,25 @@ from IPython.core.display import display, HTML
 RAW_FEATURES = ['left-x', 'left-y', 'right-x', 'right-y']
 GROUND_FEATURES = ['grnd-rx', 'grnd-ry', 'grnd-lx', 'grnd-ly']
 
+def show_wer(guesses: list, test_set: SinglesData) ->float:
+    """returns WER
+
+    :param guesses: list of test item answers, ordered
+    :param test_set: SinglesData object
+    :return:
+        WER score
+
+    WER = (S+I+D)/N  but we have no insertions or deletions for isolated words so WER = S/N
+    """
+    S = 0
+    N = len(test_set.wordlist)
+    num_test_words = len(test_set.wordlist)
+    if len(guesses) != num_test_words:
+        print("Size of guesses must equal number of test words ({})!".format(num_test_words))
+    for word_id in range(num_test_words):
+        if guesses[word_id] != test_set.wordlist[word_id]:
+            S += 1
+    print ("WER: ", float(S) / float(N), '\n')
 
 def show_errors(guesses: list, test_set: SinglesData):
     """ Print WER and sentence differences in tabular form
