@@ -23,29 +23,29 @@ def recognize(models: dict, test_set: SinglesData):
     # Q: implement the recognizer
     # return probabilities, guesses
 
-    for ix, _ in test_set.get_all_Xlengths().items():
-        X, Xlength = test_set.get_item_Xlengths(ix)
+    for y, _ in test_set.get_all_Xlengths().items():
+        X, Xlength = test_set.get_item_Xlengths(y)
 
-        scores = {}
+        scoresdict = {}
         bestword = str("")
         bestscore = float("-inf")
 
         # Repeat for all words and associated HMM models
         for word, model in models.items():
-            score = float("-inf")
+            trialscore = float("-inf")
             try:
-                # update score
-                score = model.score(X, Xlength)
+                # update score 0-gram
+                trialscore = model.score(X, Xlength)
             except:
                 pass
 
             # update bestscore
-            if score >= bestscore:
-                bestscore = score
+            if trialscore >= bestscore:
+                bestscore = trialscore
                 bestword = word
 
-            scores[word] = score
+            scoresdict[word] = trialscore
 
-        probabilities.append(scores)
+        probabilities.append(scoresdict)
         guesses.append(bestword)
     return probabilities, guesses
