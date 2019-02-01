@@ -87,23 +87,27 @@ class SelectorBIC(ModelSelector):
         :return: GaussianHMM object
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-
         bestmodel = None
         bestscore = float("+inf")
         alpha = 1.0
+        penalty = lambda x: (x[0] - 1) + (x[1] - 1) + x[2] + x[3]
         for num_states in range(self.min_n_components, self.max_n_components + 1):
+            hmm_model, modelparams, logL = None, None, None
             try:
                 # Train HMM model
                 hmm_model = GaussianHMM(n_components=num_states, covariance_type="diag", n_iter=1000,
                                         random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+                modelparams = [hmm_model.startprob_.size,hmm_model.transmat_.size,
+                                hmm_model.means_.size,hmm_model.covars_.diagonal().size]
                 # Log Likelihood on trained HMM
                 logL = hmm_model.score(self.X, self.lengths)
             except:
-                hmm_model = None
-                logL = float('-inf')
-            num_features = self.X.shape[1]
+                pass
+            # num_features = self.X.shape[1]
             # complexity penalty, The BIC applies a larger penalty when N > e^2 = 7.4.
-            p = num_states*(num_states-1) + (num_states-1) + 2*num_states*num_features
+            # The number of parameter can also be calculated by our hmmlearn model
+            # P = (model.startprob_.size - 1) + (model.transmat_.size - 1) + model.means_.size + model.covars_.diagonal().size
+            p = penalty(modelparams)
             logN = np.log(len((self.X)))
             # Calculate Bayesian Information Criteria (BIC)
             # BIC = −2 log L + alpha * p log N
@@ -235,6 +239,7 @@ class SelectorCV(ModelSelector):
                 n_splits = min(3, len(self.sequences))
             try:
                 KF = KFold(n_splits=n_splits)
+                hmm_model = None
                 for cv_train_idx, cv_test_idx in KF.split(self.sequences):
                     try:
                         X_train, lengths_train = combine_sequences(cv_train_idx, self.sequences)
